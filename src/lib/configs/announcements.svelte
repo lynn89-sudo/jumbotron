@@ -18,6 +18,17 @@
             localStorage.setItem("jumbotron.event.time", eventsTime);
         }
     })
+
+    function syncAnnouncements() {
+        sync.announcements = true;
+        document.getElementById("sync").disabled = true;
+        localStorage.setItem("jumbotron.announcement.title", announcementTitle);
+        localStorage.setItem("jumbotron.announcement.message", announcementMessage);
+        localStorage.setItem("jumbotron.event.title", eventsTitle);
+        localStorage.setItem("jumbotron.event.time", eventsTime);
+        setTimeout(function() {localStorage.setItem("jumbotron.sync", true)}, 2000);
+        setTimeout(function() {sync.announcements = false; localStorage.setItem("jumbotron.sync", false); document.getElementById("sync").disabled = false}, 3000)
+    }
     
 </script>
 
@@ -28,6 +39,12 @@
             border-radius: 15px;
             padding: 10px; 
         }
+    }
+    button {
+        background-color: rgb(92, 89, 89);
+    }
+    button.disabled {
+        cursor: progress;
     }
 </style>
 <h4>Announcements</h4>
@@ -43,3 +60,4 @@
     <input bind:value={eventsTime} type="time">
 </form>
 <p>Use the 24hr clock to configure the time of your event.</p>
+<p><button class:disabled={sync.announcements} onclick={syncAnnouncements} id="sync">Sync Announcements and Events on Display Windows</button></p>

@@ -1,3 +1,4 @@
 export let sync  = $state({
-    enabled: false
+    enabled: false,
+    announcements: false
 })

@@ -29,5 +29,5 @@
 </style>
 <h4>Display Windows</h4>
 <p>Display windows should be moved to another screen. Once you are done making changes from this window, you can use the button below to sync all changes.</p>
-<p><button onclick={openDisplay}>Open New Display Window</button><button onclick={syncDisplay} id="sync" class:disabled={sync.enabled == true}>Sync All Display Windows</button></p>
+<p><button onclick={openDisplay}>Open New Display Window</button><button onclick={syncDisplay} id="sync" class:disabled={sync.enabled == true}>Sync All Changes to Display Windows</button></p>
 <p>New windows are not automatically synced. Sync the windows using the button above when you are ready.</p>

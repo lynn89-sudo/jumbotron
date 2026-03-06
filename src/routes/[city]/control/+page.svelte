@@ -10,6 +10,7 @@
 
     import MainConfig from "$lib/configs/main.svelte";
     import AnnouncementConfig from "$lib/configs/announcements.svelte";
+    import { sync } from "$lib/sync.svelte";
 
     onMount(async function() {
         console.log("Checking city name...")
@@ -44,7 +45,28 @@
         }
         
     }
+    #syncingNotif {
+        position: fixed;
+        z-index: 1000;
+        transform: translate(-50%, -50%);
+        bottom: -150px;
+        left: 50%;
+        transition: all 0.3s ease-in-out;
+        background-color: rgb(177, 82, 82);
+        box-shadow: 0px 0px 20px 10px rgba(0, 0, 0, 0.237);
+        border-radius: 40px;
+        padding: 20px;
+        p {
+            color: white;
+        }
+    }
+    #syncingNotif.active {
+        bottom: 10px;
+    }
 </style>
+<div id="syncingNotif" class:active={sync.enabled || sync.announcements}>
+    <p>Your display windows are syncing. Hang tight!</p>
+</div>
 <h1>{proccessEventCity(page.params.city)}</h1>
 <h2 style:font-size=20px style:font-weight=400 style:margin-bottom=30px>Jumbotron Control Panel</h2>
 <p>You should keep this window open on your laptop or main screen, and open the display window on another screen.</p>
