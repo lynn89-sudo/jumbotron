@@ -30,7 +30,7 @@
     function sync() {
         if (localStorage.getItem("jumbotron.sync") == "true") {
             console.log("Started display sync");
-            if (localStorage.getItem("jumbotron.event.title") == "" || localStorage.getItem("jumbotron.event.time") == "") {
+            if (localStorage.getItem("jumbotron.event.title") == "" || localStorage.getItem("jumbotron.event.time") == "undefined" || localStorage.getItem("jumbotron.event.time") == "") {
                 event = [];
                 console.log("Cleared event");
             }

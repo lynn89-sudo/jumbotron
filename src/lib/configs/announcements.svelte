@@ -15,6 +15,8 @@
     let time = new Date();
     let placeholderTime = $state("13:30"); 
 
+    let timerID = "";
+
     let formatLabel = $state("AM/PM")
     function switchFormat() {
         if (formatLabel == "AM/PM") {
@@ -114,7 +116,8 @@
     function syncAnnouncements() {
         sync.announcements = true;
         localStorage.setItem("jumbotron.sync", false);
-        console.log("Syncing:", { announcementTitle, announcementMessage, eventsTitle });
+        clearInterval(timerID);
+        //console.log("Syncing:", { announcementTitle, announcementMessage, eventsTitle });
         localStorage.setItem("jumbotron.announcement.title", announcementTitle);
         localStorage.setItem("jumbotron.announcement.message", announcementMessage);
         localStorage.setItem("jumbotron.event.title", eventsTitle);
@@ -122,9 +125,45 @@
         localStorage.setItem("jumbotron.event.label", formatTimeLabel(eventsTime));
         setTimeout(function() {localStorage.setItem("jumbotron.sync", true)}, 2000);
         setTimeout(function() {sync.announcements = false; localStorage.setItem("jumbotron.sync", false)}, 3000);
-        setTimeout(function() {
+        setTimeout(setAlarm, 3000);
+    }
 
-        }, 3000);
+    function setAlarm() {
+        if (eventsTitle == "" || eventsTime == "") {
+            return;
+        }
+        let split = eventsTime.split(":");
+        let time = new Date();
+        if (time.getHours() > split[0]) {
+            window.alert("If this event was intended to occur today, the time of this event has already passed. If this event is intended to occur tomorrow, you will need to sync again tomorrow in order for live updates to occur.");
+            return
+        }
+        else if (time.getMinutes() > split[1] && time.getHours() == split[0]) {
+            window.alert("If this event was intended to occur today, the time of this event has already passed. If this event is intended to occur tomorrow, you will need to sync again tomorrow in order for live updates to occur.");
+            return
+        }
+        let t1 = (split[0]*60 + parseInt(split[1])); // Event
+        let t2 = (time.getHours()*60) + time.getMinutes(); // Current Time
+        timerID = setInterval(() => {
+            time = new Date();
+            t2 = (time.getHours()*60) + time.getMinutes();
+            if (t1-t2 <= 0) {
+                localStorage.setItem("jumbotron.event.label", "Now");
+                localStorage.setItem("jumbotron.sync", true);
+                setTimeout(() => {localStorage.setItem("jumbotron.sync", false); clearInterval(timerID);}, 1000);
+            }
+            else if (t1-t2 == 1) {
+                localStorage.setItem("jumbotron.event.label", "In 1 minute");
+                localStorage.setItem("jumbotron.sync", true);
+                setTimeout(() => {localStorage.setItem("jumbotron.sync", false)}, 1000);
+            }
+            else if (t1-t2 <= 30) {
+                localStorage.setItem("jumbotron.event.label", "In " + (t1-t2) + " minutes");
+                localStorage.setItem("jumbotron.sync", true);
+                setTimeout(() => {localStorage.setItem("jumbotron.sync", false)}, 1000);
+            }
+            //console.log(timerID);
+        }, 2000)
     }
     
 </script>
