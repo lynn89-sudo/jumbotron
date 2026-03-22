@@ -53,7 +53,7 @@
                 console.log("Synced announcement");
             }
 
-            if (localStorage.getItem("jumbotron.googleLink") == "" && localStorage.getItem("jumbotron.pdfLink") == "") {
+            if (localStorage.getItem("jumbotron.googleLink") == "" && localStorage.getItem("jumbotron.fileLink") == "") {
                 presentation = "";
                 console.log("Cleared presentation");
             }
@@ -62,7 +62,7 @@
                 //setTimeout(() => {document.getElementById("presentation").requestFullscreen();}, 100)
             }
             else {
-                presentation = localStorage.getItem("jumbotron.pdfLink");
+                presentation = localStorage.getItem("jumbotron.fileLink");
             }
         }
         console.log("Finished display sync");

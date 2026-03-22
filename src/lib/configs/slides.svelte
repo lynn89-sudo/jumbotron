@@ -8,12 +8,12 @@
     import { tutorial } from "$lib/sync.svelte.js";
 
     let googleLink = $state("");
-    let pdfLink = $state("");
+    let fileLink = $state("");
     let mountedEnabled = $state(false);
 
     onMount(function() {
         localStorage.setItem("jumbotron.googleLink", "");
-        localStorage.setItem("jumbotron.pdfLink", "");
+        localStorage.setItem("jumbotron.fileLink", "");
     })
 
     //https://docs.google.com/viewer?url=YOUR_PUBLIC_FILE_URL&embedded=true
@@ -54,35 +54,59 @@
         else {
             localStorage.setItem("jumbotron.googleLink", googleLink);
         }
-        localStorage.setItem("jumbotron.pdfLink", "");
+        localStorage.setItem("jumbotron.fileLink", "");
         setTimeout(function() {localStorage.setItem("jumbotron.sync", true)}, 2000);
         setTimeout(function() {sync.slides = false; localStorage.setItem("jumbotron.sync", false); document.getElementById("google").disabled = false; mountedEnabled = true;}, 3000)
-        setTimeout(() => {checkLink(localStorage.getItem("jumbotron.googleLink"))}, 3500);
+        setTimeout(() => {checkLink(localStorage.getItem("jumbotron.googleLink"), "google")}, 3500);
     }
 
-    function enablePdf() {
+    function enableFile() {
         sync.slides = true;
-        document.getElementById("pdf").disabled = true;
+        document.getElementById("file").disabled = true;
         localStorage.setItem("jumbotron.googleLink", "");
-        localStorage.setItem("jumbotron.pdfLink", pdfLink);
+        let split = fileLink.split("/");
+        let link = `https://drive.google.com/file/d/${split[5]}/preview`
+        localStorage.setItem("jumbotron.fileLink", link);
         setTimeout(function() {localStorage.setItem("jumbotron.sync", true)}, 2000);
-        setTimeout(function() {sync.slides = false; localStorage.setItem("jumbotron.sync", false); document.getElementById("pdf").disabled = false; mountedEnabled = true;}, 3000)
+        setTimeout(function() {sync.slides = false; localStorage.setItem("jumbotron.sync", false); document.getElementById("file").disabled = false; mountedEnabled = true;}, 3000)
+        setTimeout(() => {checkLink(fileLink, "file")}, 3500);
     }
 
     function unmountDisplay() {
         sync.slides = true;
         localStorage.setItem("jumbotron.googleLink", "");
-        localStorage.setItem("jumbotron.pdfLink", "");
+        localStorage.setItem("jumbotron.fileLink", "");
         mountedEnabled = false;
         setTimeout(function() {localStorage.setItem("jumbotron.sync", true);}, 2000);
         setTimeout(function() {localStorage.setItem("jumbotron.sync", false); sync.slides = false;}, 3000)
     }
 
-    async function checkLink(link) {
+    async function checkLink(link, type) {
+        /*
+        console.log(type)
+        if (type == "google") {
+            console.log("Checking google link");
+            if (link.indexOf("https://docs.google.com/presentation") == -1 || link.indexOf("pubembed") == -1) {
+                unmountDisplay();
+                window.alert("The format of the provided link does not match with Google Slides. Link will be unmounted from displays.");
+                return;
+            }
+        }
+        else if (type == "file") {
+            console.log("Checking file link"); //https://drive.google.com/file/d/16AS73qqHN1bS1YzrjH34Fel4h7o2tuIV/view?usp=share_link
+            if (link.indexOf("https://drive.google.com/file") == -1 || link.indexOf("view?usp=share_link") == -1) {
+                unmountDisplay();
+                window.alert("The format of the provided link does not match with Google Drive. Link will be unmounted from displays.");
+                return;
+            }
+        }
+            */
         let check = await fetch(link);
+        //console.log(check.ok)
         if (!check.ok) {
-            window.alert("Provided link does not work. Link will be unmounted from displays.")
             unmountDisplay();
+            window.alert("Provided link does not work. Link will be unmounted from displays.");
+            return;
         }
     }
 </script>
@@ -111,17 +135,17 @@
     </form>
     <p><button onclick={enableGoogle} id="google" class:disabled={sync.slides}>Display Google Slides on Display Windows</button></p>
     {#if tutorial.enabled}<p>Note that your progression through the slides are individual to the display window. Multiple display windows will not progress through the slides together.</p>{/if}
-    <h4 style:margin-top=10px>PDFs</h4>
-    {#if tutorial.enabled}<p>To display a PDF on your display window, you will need to create a public link to the content. The best way to do this is upload your document to a GitHub repo and copy the raw content link. Once you have the link, past it below.</p>{/if}
+    <h4 style:margin-top=10px>Google Drive Files</h4>
+    {#if tutorial.enabled}<p>To display a file on your display window, you will need to find your file in Google Drive. From there, enter share and copy the link. Paste that link below.</p>{/if}
     <form> 
-        <input bind:value={pdfLink} class="bigInput" type="url" placeholder="https://raw.githubusercontent.com/...">
+        <input bind:value={fileLink} class="bigInput" type="url" placeholder="https://drive.google.com/file...">
     </form>
     {#if tutorial.enabled}<p>Note that your progression through the document is individual to the display window, and you will need to use scroll or arrow keys to navigate the document. Multiple display windows will not progress through the document together.</p>{/if}
-    <p><button onclick={enablePdf} id="pdf" class:disabled={sync.slides}>Display PDF on Display Windows</button></p>
+    <p><button onclick={enableFile} id="file" class:disabled={sync.slides}>Display File on Display Windows</button></p>
 </div>
 {:else}
 <div transition:slide>
-    <p>Your content should now be mounted on your display windows. Use the button below to unmount your content. Content can neither be changed to another link nor swapped between Google Slides and PDF until unmounted.</p>
+    <p>Your content should now be mounted on your display windows. Use the button below to unmount your content. Content can neither be changed to another link nor swapped between Google Slides and file until unmounted.</p>
     <p><button onclick={unmountDisplay}>Unmount Content from Display Windows</button></p>
 </div>
 {/if}
