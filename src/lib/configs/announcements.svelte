@@ -16,6 +16,7 @@
     let placeholderTime = $state("13:30"); 
 
     let timerID = "";
+    let timerChange = 0;
 
     let formatLabel = $state("AM/PM")
     function switchFormat() {
@@ -39,16 +40,14 @@
         }
     })
 
-    
 
-    //console.log(time.getHours());
     /*
     onMount(function() {
         
         placeholderTime = "";
         if (time.getHours() == 0) {
             placeholderTime += "12:";
-            if (time.getMinutes() <= 9) {
+            if (time.getMinutes() <= 9) 
                 placeholderTime += "0";
             }
             placeholderTime += time.getMinutes();
@@ -117,15 +116,16 @@
         sync.announcements = true;
         localStorage.setItem("jumbotron.sync", false);
         clearInterval(timerID);
-        //console.log("Syncing:", { announcementTitle, announcementMessage, eventsTitle });
+        timerID = "";
+        timerChange = 0;
         localStorage.setItem("jumbotron.announcement.title", announcementTitle);
         localStorage.setItem("jumbotron.announcement.message", announcementMessage);
         localStorage.setItem("jumbotron.event.title", eventsTitle);
         localStorage.setItem("jumbotron.event.time", eventsTime);
         localStorage.setItem("jumbotron.event.label", formatTimeLabel(eventsTime));
+        setTimeout(setAlarm, 1000);
         setTimeout(function() {localStorage.setItem("jumbotron.sync", true)}, 2000);
         setTimeout(function() {sync.announcements = false; localStorage.setItem("jumbotron.sync", false)}, 3000);
-        setTimeout(setAlarm, 3000);
     }
 
     function setAlarm() {
@@ -154,15 +154,20 @@
             }
             else if (t1-t2 == 1) {
                 localStorage.setItem("jumbotron.event.label", "In 1 minute");
-                localStorage.setItem("jumbotron.sync", true);
-                setTimeout(() => {localStorage.setItem("jumbotron.sync", false)}, 1000);
+                if (timerChange != t1-t2) {
+                    timerChange = t1-t2;
+                    localStorage.setItem("jumbotron.sync", true);
+                    setTimeout(() => {localStorage.setItem("jumbotron.sync", false)}, 1000);
+                }
             }
             else if (t1-t2 <= 30) {
                 localStorage.setItem("jumbotron.event.label", "In " + (t1-t2) + " minutes");
-                localStorage.setItem("jumbotron.sync", true);
-                setTimeout(() => {localStorage.setItem("jumbotron.sync", false)}, 1000);
+                if (timerChange != t1-t2) {
+                    timerChange = t1-t2;
+                    localStorage.setItem("jumbotron.sync", true);
+                    setTimeout(() => {localStorage.setItem("jumbotron.sync", false)}, 1000);
+                }
             }
-            //console.log(timerID);
         }, 2000)
     }
     
@@ -201,5 +206,4 @@
     {/if}
 </form>
 {#if tutorial.enabled}<p>International Format will display the time of your event in the 24 hour clock; AM/PM format will display the time of your event in the 12 hour clock. Clicking the button above toggles between formats.</p>{/if}
-<!--{#if tutorial.enabled}<p>Use the 24hr clock to configure the time of your event.</p>{/if}-->
 <p><button class:disabled={sync.announcements} onclick={syncAnnouncements} disabled={sync.announcements}>Sync Announcements and Events on Display Windows</button></p>
