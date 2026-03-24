@@ -4,6 +4,7 @@
     import { onMount } from "svelte";
     import { eventName } from "$lib/event.js";
     import Peer from "peerjs";
+    import { fly, slide } from "svelte/transition";
 
     onMount(() => {
         if (page.params.city == "live") {
@@ -40,6 +41,7 @@
             })
             dataConnection.on("data", (data) => {
                 console.log("Recieved packet");
+                console.log(data);
                 packet = data;
             })
         })
@@ -61,14 +63,16 @@
     }
 </style>
 {#if mode == 0}
-<h1>{eventName} Jumbotron</h1>
-<p style:margin-bottom=40px>Let's get you started! Please enter the 5-digit code provided by your event organizers in the form below.</p>
-<form onsubmit={connectToEvent}>
-    <input bind:value={inputtedId} type="text" minlength=5 maxlength=5 required placeholder="ID Number"><br>
-</form>
+<div out:slide in:slide={{delay:1000}} style:margin-top=20px>
+    <h1>{eventName} Jumbotron</h1>
+    <p style:margin-bottom=40px>Let's get you started! Please enter the 5-digit code provided by your event organizers in the form below.</p>
+    <form onsubmit={connectToEvent}>
+        <input bind:value={inputtedId} type="text" minlength=5 maxlength=5 required placeholder="ID Number"><br>
+    </form>
+</div>
 {/if}
 {#if mode == 1}
-<div style:margin-top=20px>
+<div in:fly={{y:-200, delay:1000}} out:fly={{y:-200}} style:margin-top=20px>
     <p>Welcome to</p>
     <h1 style:margin-top=0px>{eventName} {packet.city}</h1>
 </div>

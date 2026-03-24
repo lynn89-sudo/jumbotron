@@ -14,6 +14,8 @@
     import DataConnection from "peerjs";
 
     let liveshareEnabled = $state(false);
+    let blockConnections = $state(false);
+    let blockPings = $state(false);
 
     let peer;
     let tries = 3;
@@ -38,12 +40,22 @@
             liveshareEnabled = true;
             peerInfo.code = code;
             peerInfo.connections = 0;
+            peerInfo.packetsSent = 0;
             //console.log(peerInfo);
         })
         peer.on("connection", (dataConnection) => {
             dataConnection.on("open", () => {
-                dataConnection.send(sendPacket());
-                console.log("Sent a packet");
+                if (blockConnections) {
+                    dataConnection.close();
+                    peerInfo.connections++;
+                }
+                else {
+                    dataConnection.send(sendPacket());
+                    peerInfo.connections++;
+                }
+            })
+            dataConnection.on("close", () => {
+                peerInfo.connections--;
             })
         })
     }
@@ -73,11 +85,34 @@
     function sendPacket() {
         let packet = {};
         packet.city = proccessCity(page.params.city);
+        packet.event = {};
+        packet.event.label = localStorage.getItem("jumbotron.event.label");
+        packet.event.time = localStorage.getItem("jumbotron.event.time");
+        peerInfo.packetsSent++;
         return packet;
     }
 
     async function copyCode() {
         await navigator.clipboard.writeText(peerInfo.code);   
+    }
+
+    function toggle(which) {
+        if (which == "connections") {
+            if (blockConnections) {
+                blockConnections = false;
+            }
+            else {
+                blockConnections = true;
+            }
+        }
+        else if (which == "pings") {
+            if (blockPings) {
+                blockPings = false;
+            }
+            else {
+                blockPings = true;
+            }
+        }
     }
     
 
@@ -105,6 +140,17 @@
             color: rgb(85, 85, 85);
         }
     }
+    h4 {
+        margin-top: 35px;
+    }
+
+    span.monitor {
+        padding: 8px;
+        margin: 3px;
+        border-radius: 20px;
+        background-color: grey;
+        color: white;
+    }
 </style>
 
 <div>
@@ -118,6 +164,10 @@
     <p><button onclick={destroyLiveshare}>Disable Liveshare</button></p>
     <h4>Participant Code</h4>
     <h5 style:font-size=30px>{peerInfo.code} <button onclick={copyCode} class="copy"><span translate="no" class="material-symbols-outlined">file_copy</span></button></h5>
-    <p>Participants should use this code to view information on their device; you might want to copy this code into an announcement. If your liveshare restarts, this code will likely change.</p>
+    {#if tutorial.enabled}<p>Participants should use this code to view information on their device; you might want to copy this code into an announcement. If your liveshare restarts, this code will likely change.</p>{/if}
+    <h4>Monitor</h4>
+    <p>Current connections: <span class="monitor">{peerInfo.connections}</span></p>
+    <p>Information pings: <span class="monitor">{peerInfo.packetsSent}</span></p>
+    <p>{#if !blockConnections}<button onclick={() => {toggle("connections")}}>Block New Connections</button>{:else}<button onclick={() => {toggle("connections")}}>Unblock New Connections</button>{/if} {#if !blockPings}<button onclick={() => {toggle("pings")}}>Block Information Pings</button>{:else}<button onclick={() => {toggle("pings")}}>Unblock Information Pings</button>{/if}</p>
     {/if}
 </div>
