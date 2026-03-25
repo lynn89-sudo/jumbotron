@@ -118,8 +118,10 @@
 
     function formatTimeLabel(raw) {
         if (formatLabel == "AM/PM") {
+            sync.eventFormat = "AM/PM";
             return raw;
         }
+        sync.eventFormat = "International";
         let splitted = raw.split(":");
         if (splitted[0] > 12) {
             let rtn = splitted[0]-12;

@@ -7,12 +7,12 @@
     import { sync } from "$lib/sync.svelte.js";
     import { tutorial } from "$lib/sync.svelte.js";
 
-    let googleLink = $state("");
+    //let googleLink = $state("");
     let fileLink = $state("");
     let mountedEnabled = $state(false);
 
     onMount(function() {
-        localStorage.setItem("jumbotron.googleLink", "");
+        //localStorage.setItem("jumbotron.googleLink", "");
         localStorage.setItem("jumbotron.fileLink", "");
     })
 
@@ -44,6 +44,7 @@
     }
         */
 
+        /*
     function enableGoogle() {
         sync.slides = true;
         document.getElementById("google").disabled = true;
@@ -59,6 +60,7 @@
         setTimeout(function() {sync.slides = false; localStorage.setItem("jumbotron.sync", false); sync.liveshare = false; document.getElementById("google").disabled = false; mountedEnabled = true;}, 3000)
         setTimeout(() => {checkLink(localStorage.getItem("jumbotron.googleLink"), "google")}, 3500);
     }
+        */
 
     function enableFile() {
         sync.slides = true;
@@ -74,7 +76,7 @@
 
     function unmountDisplay() {
         sync.slides = true;
-        localStorage.setItem("jumbotron.googleLink", "");
+        //localStorage.setItem("jumbotron.googleLink", "");
         localStorage.setItem("jumbotron.fileLink", "");
         mountedEnabled = false;
         setTimeout(function() {localStorage.setItem("jumbotron.sync", true); sync.liveshare = true;}, 2000);
@@ -82,6 +84,7 @@
     }
 
     async function checkLink(link, type) {
+        return true;
         /*
         console.log(type)
         if (type == "google") {
@@ -131,6 +134,7 @@
 </style>
 {#if !mountedEnabled}
 <div transition:slide>
+<!--
     <h4>Google Slides</h4>
     {#if tutorial.enabled}<p>To display a Google Slides Presentation on your display windows, go to your Google Slides Presentation, find <i>Publish to Web</i>, choose Embed, copy and then paste the provided link below. You can also copy the entire embed given by Google.</p>{/if}
     <form> 
@@ -138,8 +142,10 @@
     </form>
     <p><button onclick={enableGoogle} id="google" class:disabled={sync.slides}>Display Google Slides on Display Windows</button></p>
     {#if tutorial.enabled}<p>Note that your progression through the slides are individual to the display window. Multiple display windows will not progress through the slides together.</p>{/if}
+-->
     <h4>Google Drive Files</h4>
-    {#if tutorial.enabled}<p>To display a file on your display window, you will need to find your file in Google Drive. From there, enter share and copy the link. Paste that link below.</p>{/if}
+    {#if tutorial.enabled}<p>To display a file on your display window, you will need to find your file in Google Drive. From there, find share and copy the link. Paste that link below. This will also work for Google Slides.</p>{/if}
+    <p>You should confirm that your document is publically accessible.</p>
     <form> 
         <input bind:value={fileLink} class="bigInput" type="url" placeholder="https://drive.google.com/file...">
     </form>
@@ -149,7 +155,8 @@
 </div>
 {:else}
 <div transition:slide>
-    <p>Your content should now be mounted on your display windows. Use the button below to unmount your content. Content can neither be changed to another link nor swapped between Google Slides and file until unmounted.</p>
+    <p>Your content should now be mounted on your display windows. Use the button below to unmount your content. Content cannot be changed until unmounted.</p>
+    {#if sync.liveshare}<p>Note that participants who have connection to your liveshare have unrestricted access to your file/presentation; pages and slides are not limited to your current progression through the document. It is additionally imperative that your public access link does not grant editing permissions.</p>{/if}
     <p><button onclick={unmountDisplay}>Unmount Content from Display Windows</button></p>
 </div>
 {/if}

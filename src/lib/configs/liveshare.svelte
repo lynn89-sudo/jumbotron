@@ -27,7 +27,7 @@
         let code = codeGen();
         peer = new Peer("hackclub" + eventName + code);
         peer.on("error", function(err) {
-            if (err.type = "peer-unavailable" && tries > 0) {
+            if (err.type == "peer-unavailable" && tries > 0) {
                 tries--;
                 peer.destroy();
                 enableLiveshare();
@@ -46,13 +46,16 @@
             //console.log(peerInfo);
         })
         peer.on("connection", (dataConnection) => {
+            console.log("Incoming connection");
             dataConnection.on("open", () => {
                 if (blockConnections) {
                     dataConnection.close();
                     //peerInfo.connections++;
                 }
                 else {
-                    dataConnection.send(sendPacket());
+                    if (!blockPings) {
+                        dataConnection.send(sendPacket());
+                    }
                     activeConnections.push(dataConnection);
                     //peerInfo.connections++;
                 }
@@ -95,22 +98,27 @@
 
     function sendPacket() {
         let packet = {};
+        let count = 0;
         packet.city = proccessCity(page.params.city);
         if (localStorage.getItem("jumbotron.event.label") != "" && localStorage.getItem("jumbotron.event.time") != "undefined") {
             packet.event = {};
-            packet.event.label = localStorage.getItem("jumbotron.event.label");
             packet.event.time = localStorage.getItem("jumbotron.event.time");
+            packet.event.title = localStorage.getItem("jumbotron.event.title");
+            packet.event.format = sync.eventFormat;
+            count++
         }
         if (localStorage.getItem("jumbotron.announcement.title") != "" && localStorage.getItem("jumbotron.event.message") != "") {
             packet.announcement = {};
             packet.announcement.title = localStorage.getItem("jumbotron.announcement.title");
             packet.announcement.message = localStorage.getItem("jumbotron.announcement.message");
+            count++;
         }
-        if (localStorage.getItem("jumbotron.googleLink") != "") {
-            packet.presentation = localStorage.getItem("jumbotron.googleLink");
-        }
-        else if (localStorage.getItem("jumbotron.fileLink") != "") {
+        if (localStorage.getItem("jumbotron.fileLink") != "") {
             packet.presentation = localStorage.getItem("jumbotron.fileLink");
+            count++;
+        }
+        if (count == 0) {
+            packet.noContent = true;
         }
         peerInfo.packetsSent++;
         return packet;
@@ -159,20 +167,9 @@
 </script>
 
 <style>
-    form {
-        input {
-            margin: 8px;
-            border-radius: 15px;
-            padding: 10px; 
-        }
-    }
     button {
         background-color: rgb(92, 89, 89);
     }
-    button.disabled {
-        cursor: progress;
-    }
-
     button.copy:active {
         background-color: white;
         transform: scale(1.04);
