@@ -38,13 +38,42 @@
         sync.enabled = true;
         setTimeout(() => {localStorage.setItem("jumbotron.sync", false); sync.enabled = false;}, 2000)
     }
-    /*
-    List of features
-    - Set the next event and its time
-    - Announcements popup
-    - Set a timer
-    - Mode to view a google slides
-    */
+    
+
+    let wakeLock = null;
+
+    // Replace your existing requestWakeLock and onMount logic with this:
+
+    async function requestWakeLock() {
+        if ('wakeLock' in navigator) {
+            try {
+                wakeLock = await navigator.wakeLock.request('screen');
+                console.log("WakeLock enabled");
+                
+                wakeLock.addEventListener("release", () => {
+                    console.log("WakeLock was released");
+                });
+            } catch (err) {
+                console.error(`${err.name}, ${err.message}`);
+            }
+        }
+    }
+
+    onMount(() => {
+        requestWakeLock();
+
+        // Re-request lock if the tab was hidden and comes back to focus
+        const handleVisibilityChange = async () => {
+            if (document.visibilityState === 'visible') {
+                await requestWakeLock();
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    });
+
+    onMount(() => {requestWakeLock();})
 </script>
 
 <svelte:head>

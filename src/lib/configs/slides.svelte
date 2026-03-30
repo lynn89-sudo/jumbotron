@@ -112,6 +112,16 @@
             return;
         }
     }
+
+    let savedLinks = [];
+    function modifyLinks(mode, link) {
+        if (mode) {
+            savedLinks.push(link);
+        }
+        else {
+            savedLinks = savedLinks.filter((item) => item != link);
+        }
+    }
 </script>
 
 <style>
@@ -151,10 +161,10 @@
     </form>
     {#if tutorial.enabled}<p>Note that your progression through the document is individual to the display window, and you will need to use scroll or arrow keys to navigate the document. Multiple display windows will not progress through the document together.</p>{/if}
     <p><button onclick={enableFile} id="file" class:disabled={sync.slides}>Display File on Display Windows</button></p>
-    <h4>Saved Links</h4>
 </div>
 {:else}
 <div transition:slide>
+    <p>Currently displaying <strong>{fileLink}</strong></p>
     <p>Your content should now be mounted on your display windows. Use the button below to unmount your content. Content cannot be changed until unmounted.</p>
     {#if sync.liveshare}<p>Note that participants who have connection to your liveshare have unrestricted access to your file/presentation; pages and slides are not limited to your current progression through the document. It is additionally imperative that your public access link does not grant editing permissions.</p>{/if}
     <p><button onclick={unmountDisplay}>Unmount Content from Display Windows</button></p>

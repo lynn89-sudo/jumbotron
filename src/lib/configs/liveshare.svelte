@@ -23,6 +23,45 @@
     let peerInfo = $state({});
     let activeConnections = $state([]);
 
+    let localIP = $state("");
+    onMount(async function() {
+        let raw = await fetch("https://api.ipify.org/?format=json");
+        let readable = await raw.json();
+        localIP = readable.ip;
+        console.log(readable.ip)
+    })
+    let alerts = $state([]);
+    onMount(() => {
+        setInterval(() => {
+            alerts = [];
+            let missingIPs = 0;
+            let notMatchingIPs = 0;
+            for (let i = 0; i < activeConnections.length; i++) {
+                if (activeConnections[i].ip == null) {
+                    missingIPs++;
+                }
+                else if (activeConnections[i].ip != localIP) {
+                    notMatchingIPs++;
+                    console.clear();
+                    console.log("This IP Address on the Liveshare doesn't match", activeConnections[i].ip)
+                }
+            }
+
+            if (missingIPs > 0) {
+                alerts.push({
+                    "name": "Missing IP Addresses",
+                    "message": `${missingIPs} connection(s) failed to provide their IP address.`
+                })
+            }
+            if (notMatchingIPs > 0) {
+                alerts.push({
+                    "name": "Mismatching IP Addresses",
+                    "message": `${notMatchingIPs} connection(s) provided an IP that does not match with yours. This could potentially mean that connections are entering your Liveshare from other networks.`
+                })
+            }
+        }, 10000)
+    })
+
     function enableLiveshare() {
         let code = codeGen();
         peer = new Peer("hackclub" + eventName + code);
@@ -48,26 +87,34 @@
         peer.on("connection", (dataConnection) => {
             console.log("Incoming connection");
             dataConnection.on("open", () => {
-                if (blockConnections) {
+                if (blockConnections || blockPings) {
                     dataConnection.close();
                     //peerInfo.connections++;
                 }
                 else {
-                    if (!blockPings) {
-                        dataConnection.send(sendPacket());
-                    }
-                    activeConnections.push(dataConnection);
+                    dataConnection.send(sendPacket());
+                    activeConnections.push({
+                        "connection": dataConnection
+                    });
                     //peerInfo.connections++;
                 }
             })
             dataConnection.on("close", () => {
                 //peerInfo.connections--;
-                activeConnections = activeConnections.filter((connection) => connection != dataConnection);
+                activeConnections = activeConnections.filter((item) => item.connection != dataConnection);
             })
             dataConnection.on("data", (data) => {
                 if (data == "poll") {
                     if (!blockPings) {
                         dataConnection.send(sendPacket());
+                    }
+                }
+                else if (data.ip != null) {
+                    for (let i = 0; i < activeConnections.length; i++) {
+                        if (activeConnections[i].connection == dataConnection) {
+                            activeConnections[i].ip = data.ip;
+                            //console.log(activeConnections);
+                        }
                     }
                 }
             })
@@ -76,6 +123,7 @@
     function destroyLiveshare() {
         peer.destroy();
         peer = null;
+        activeConnections = [];
         console.log("Peer destroyed");
         liveshareEnabled = false;
         peerInfo = {};
@@ -131,7 +179,7 @@
                     return;
                 }
                 for (let i = 0; i < activeConnections.length; i++) {
-                    let connection = activeConnections[i];
+                    let connection = activeConnections[i].connection;
                     connection.send(sendPacket());
                 }
             })
@@ -156,6 +204,8 @@
         else if (which == "pings") {
             if (blockPings) {
                 blockPings = false;
+                sync.liveshare = true;
+                setTimeout(() => {sync.liveshare = false}, 1000)
             }
             else {
                 blockPings = true;
@@ -191,20 +241,30 @@
 </style>
 
 <div>
-    {#if tutorial.enabled}
-    <p>Liveshare allows you to share information displayed on Jumbotron to your participants through their own screens.</p>
-    {/if}
-    {#if !liveshareEnabled}
-    <p><button onclick={enableLiveshare}>Enable Liveshare</button></p>
-    <p><i>If you are using a low performance device, Liveshare is not recomended.</i></p>
-    {:else}
-    <p><button onclick={destroyLiveshare}>Disable Liveshare</button></p>
-    <h4>Participant Code</h4>
-    <h5 style:font-size=30px>{peerInfo.code} <button onclick={copyCode} class="copy"><span translate="no" class="material-symbols-outlined">file_copy</span></button></h5>
-    {#if tutorial.enabled}<p>Participants should use this code to view information on their device; you might want to copy this code into an announcement. If your liveshare restarts, this code will likely change.</p>{/if}
-    <h4>Monitor</h4>
-    <p>Current connections: <span class="monitor">{activeConnections.length}</span></p>
-    <p>Information pings: <span class="monitor">{peerInfo.packetsSent}</span></p>
-    <p>{#if !blockConnections}<button onclick={() => {toggle("connections")}}>Block New Connections</button>{:else}<button onclick={() => {toggle("connections")}}>Unblock New Connections</button>{/if} {#if !blockPings}<button onclick={() => {toggle("pings")}}>Halt Information Pings</button>{:else}<button onclick={() => {toggle("pings")}}>Resume Information Pings</button>{/if}</p>
-    {/if}
+
+        {#if tutorial.enabled}
+        <p>Liveshare allows you to share information displayed on Jumbotron to your participants through their own screens.</p>
+        {/if}
+        {#if !liveshareEnabled}
+        <p><button onclick={enableLiveshare}>Enable Liveshare</button></p>
+        <p><i>If you are using a low performance device, Liveshare is not recomended.</i></p>
+        {:else}
+        <p><button onclick={destroyLiveshare}>Disable Liveshare</button></p>
+        <h4>Participant Code</h4>
+        <h5 style:font-size=30px>{peerInfo.code} <button onclick={copyCode} class="copy"><span translate="no" class="material-symbols-outlined">file_copy</span></button></h5>
+        {#if tutorial.enabled}<p>Participants should use this code to view information on their device; you might want to copy this code into an announcement. If your liveshare restarts, this code will likely change.</p>{/if}
+        <h4>Monitor</h4>
+        <p>IP Address: {localIP}</p>
+        <p>Current connections: <span class="monitor">{activeConnections.length}</span></p>
+        <p>Information pings: <span class="monitor">{peerInfo.packetsSent}</span></p>
+        <p>{#if !blockConnections}<button onclick={() => {toggle("connections")}}>Block New Connections</button>{:else}<button onclick={() => {toggle("connections")}}>Unblock New Connections</button>{/if} {#if !blockPings}<button onclick={() => {toggle("pings")}}>Pause Liveshare</button>{:else}<button onclick={() => {toggle("pings")}}>Resume Liveshare</button>{/if}</p>
+        {#if alerts.length > 0}
+        <h4>Alerts</h4>
+        {#each alerts as alert}
+        <h5 style:font-size=20px style:margin-top=30px>{alert.name}</h5>
+        <p>{alert.message}</p>
+        {/each}
+        {/if}
+        {/if}
+
 </div>

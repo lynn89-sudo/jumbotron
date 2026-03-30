@@ -6,9 +6,13 @@
     import Peer from "peerjs";
     import { fly, slide } from "svelte/transition";
 
-    onMount(() => {
-        if (page.params.city == "live") {
+    let ip = $state("");
 
+    onMount(async () => {
+        if (page.params.city == "live") {
+            let ipRaw = await fetch("https://api.ipify.org/?format=json");
+            let ipJson = await ipRaw.json();
+            ip = ipJson.ip;
         }
         else {
             window.location.href = base + "/" // Eventually should route to an error page
@@ -25,6 +29,7 @@
 
     let inputtedId = $state("");
 
+
     function connectToEvent() {
         //event.preventDefault();
         console.log("Attempting connection");
@@ -40,6 +45,9 @@
             })
             dataConnection.on("open", () => {
                 console.log("Connection established");
+                dataConnection.send({
+                    "ip": ip
+                })
                 mode = 1;
             })
             dataConnection.on("close", () => {

@@ -4,7 +4,7 @@
     import { onMount } from "svelte";
     import { blur, fade, fly, slide } from "svelte/transition"
 
-    import { proccessEventCity } from "$lib/event.js";
+    import { eventName, proccessEventCity } from "$lib/event.js";
     import { proccessCity } from "$lib/event.js";
     import { checkCity } from "$lib/event.js";
 
@@ -25,6 +25,7 @@
         window.addEventListener("keypress", (e) => {
             if (e.key == "f") {
                 document.documentElement.requestFullscreen();
+                requestWakeLock();
             }
         })
     })
@@ -77,6 +78,38 @@
         //console.log(event);
     }
 
+    let wakeLock = null;
+
+    // Replace your existing requestWakeLock and onMount logic with this:
+
+    async function requestWakeLock() {
+        if ('wakeLock' in navigator) {
+            try {
+                wakeLock = await navigator.wakeLock.request('screen');
+                console.log("WakeLock enabled");
+                
+                wakeLock.addEventListener("release", () => {
+                    console.log("WakeLock was released");
+                });
+            } catch (err) {
+                console.error(`${err.name}, ${err.message}`);
+            }
+        }
+    }
+
+    onMount(() => {
+        requestWakeLock();
+
+        // Re-request lock if the tab was hidden and comes back to focus
+        const handleVisibilityChange = async () => {
+            if (document.visibilityState === 'visible') {
+                await requestWakeLock();
+            }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    });
 </script>
 <style>
     #event {
@@ -122,7 +155,7 @@
         width: 90%;
         padding: 20px;
         border-radius: 25px;
-        z-index: 999;
+        z-index: 1000;
 
         div {
             padding: 5px;
@@ -144,8 +177,8 @@
         bottom: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(44, 44, 44, 0.863);
-        z-index: 998
+        background-color: rgba(44, 44, 44, 0.971);
+        z-index: 999
     }
 
     #presentation {
@@ -153,7 +186,22 @@
         transform: translate(-50%, -50%);
         left: 50%;
         top: 50%;
-        z-index: 1000
+        z-index: 998
+    }
+
+    #eventNameDisplay {
+        position: fixed;
+        left: 20px;
+        bottom: 20px;
+        h1 {
+            color: rgb(85, 40, 14);
+            font-size: 90px;
+            text-align: left;
+
+            span {
+                color: rgb(188, 103, 54);
+            }
+        }
     }
 </style>
 <svelte:window bind:innerHeight={screenY} bind:innerWidth={screenX}></svelte:window>
@@ -166,8 +214,8 @@
 </div>
 {/if}
 {#if announcement.length > 0}
-<div id="announcement-smoke" transition:fade={{delay: 1000}}></div>
-<div id="announcement" transition:fly={{y:400, duration:1500}}>
+<div id="announcement-smoke" in:fade out:fade={{delay: 1000}}></div>
+<div id="announcement" in:fly={{y:400, duration:1500, delay: 1000}} out:fly={{y:400, duration:1500}}>
     <h1>{announcement[0]}</h1>
     <!--<span class="material-symbols-outlined">circle_notifications</span>-->
     <div>
@@ -178,3 +226,6 @@
 {#if presentation != ""}
 <iframe transition:blur id="presentation" src={presentation} width={screenX-10} height={screenY-10} title="Presentation"></iframe>
 {/if}
+<div id="eventNameDisplay">
+    <h1><span>{eventName}</span><br>{proccessCity(page.params.city)}</h1>
+</div>

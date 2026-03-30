@@ -283,5 +283,5 @@
     {#if !eventOn}<button disabled={sync.announcements} onclick={function() {toggle(1);}} class:disabled={sync.announcements}>Display Event</button>{:else}<button disabled={sync.announcements} onclick={function() {toggle(1);}} class:disabled={sync.announcements}>Hide Event</button> <button disabled={sync.announcements} onclick={function() { update(1)}} class:disabled={sync.announcements}>Sync Event</button>{/if}
 
 </form>
-{#if tutorial.enabled}<p>International Format will display the time of your event in the 24 hour clock; AM/PM format will display the time of your event in the 12 hour clock. Clicking the button above toggles between formats.</p>{/if}
+{#if tutorial.enabled}<p>Time must be inputted in 24 hour format. International Format will display the time of your event in the 24 hour clock; AM/PM format will display the time of your event in the 12 hour clock. Clicking the button above toggles between formats.</p>{/if}
 <!--<p><button class:disabled={sync.announcements} onclick={syncAnnouncements} disabled={sync.announcements}>Sync Announcements and Events on Display Windows</button></p>-->

@@ -13,7 +13,7 @@
     })
 
     function openDisplay() {
-        window.open(base + "/" + page.params.city + "/display");
+        window.open(base + "/" + page.params.city + "/display", "_blank");
         setTimeout(function() {localStorage.setItem("jumbotron.sync", true);}, 2000);
        setTimeout(function() {localStorage.setItem("jumbotron.sync", false);}, 3000);
     }
