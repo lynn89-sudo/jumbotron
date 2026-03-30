@@ -1,0 +1,1 @@
+import{p as r}from"./CfbY_qrj.js";import{s as t}from"./t5832KbS.js";const e={get error(){return r.error},get params(){return r.params},get status(){return r.status}};t.updated.check;const p=e;export{p};
